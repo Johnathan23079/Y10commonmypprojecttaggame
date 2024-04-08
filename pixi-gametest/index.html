@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<!--Author: Johnathan Lee-->
+<!--Date March 27, 2024-->
+<!--Two player tag game to promote communication-->
+<!--Features-->
+<!--1. Players can move around the screen using the arrow keys and the wasd keys-->
+<!--2. Players can tag each other and the tagger wins if the players intersect-->
+<!--3. The runner wins if the tagger does not tag the runner within 800 ticks-->
+<!--4. The game keeps track of the tagger wins and the runner wins-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src ="pixi.min.js" ></script> //import pixi.js library for game
+    <script>
+        let app; //app variable for pixi.js this allows for the game to be displayed on the screen
+        let player; //player variable for the tagger
+        let player2;  //player2 variable for the runner
+        let timer = 0; //timer variable to allow tagger to win
+        let speed = 5; //speed variable for player movement stopping ans starting
+        let taggerwins = 0; //taggerwins variable to keep track of tagger wins
+        let runnerwins = 0; //runnerwins variable to keep track of runner wins
+      
+        
+        window.onload = function(){ //function to start the game as soon as its loaded
+            
+            app = new PIXI.Application({ //use pixi.js to create the game borders
+                width: 2500, //dimensions of the the game, should fit most desktop screens at 1080p
+                height: 1000,
+                backgroundColor: 0x1000b //background color of the game set to black
+            });
+            document.body.appendChild(app.view); //add the game to the body of the html
+        
+            // this assigns the player variables to pixi sprites 
+            player = new PIXI.Sprite.from('tag.png'); //create the tagger player
+          
+            player2 = new PIXI.Sprite.from('player.png');   //create the runner player
+            // starting positions of the players on the left and right of the screen
+            player.anchor.set(0.5); //anchors are the starting points of the player sprites
+
+            player2.anchor.set(0.5);
+            player.x = 16;
+          
+            player2.x = 2000;
+            player.y = app.view.height / 2;
+         
+            player2.y = app.view.height / 2;
+            app.stage.addChild(player); //add the player sprites to the stage or canvas
+          
+            app.stage.addChild(player2); //add the player2 sprite to the stage or canvas
+            
+
+
+
+            // keyboard movement
+            window.addEventListener('keydown', keysDown); //event listener for keydown
+            window.addEventListener('keyup', keysUp); //event listener for keyup
+
+            app.ticker.add(gameLoop); //add the game loop to the app which allows the fucntion to be looped and repeated based on pixi.js ticker    
+            // key press functions that allow the game to read the key presses 
+            function keysDown(e){
+            
+                keys[e.keyCode] = true; //keys array that allows the game to read the key presses
+
+            }
+            function keysUp(e){
+                keys[e.keyCode] = false; //keys array that allows the game to read the key presses
+            }
+            // sets the stage to interactive so that the player can move
+            app.stage.interactive = true;
+         
+          //TECHNICAL HIGHLIGHT 1 for C2--------------------------------------------------------------------------------------
+            function gameLoop(){
+                timer += 1; //timer to allow the tagger to win updates every tick
+                console.log(timer);
+                //player movement
+                //player 1 movement
+                //keycodes
+                //w = 87
+                //a = 65
+                //s = 83
+                //d = 68
+                //player 2 movement
+                //keycodes
+                //up = 38
+                //left = 37
+                //down = 40
+                //right = 39
+                if(keys[87]){
+                    player.y -= speed; //speed is 5 so the player moves 5 pixels per tick of the key being pressed down - and + determine left and right and up and down
+                }
+                if(keys[65]){
+                    player.x -= speed;
+                }
+                if(keys[83]){
+                    player.y += speed;
+                }
+                if(keys[68]){
+                    player.x += speed;
+                }
+                if(keys[38]){
+                    player2.y -= speed;
+                }
+                if(keys[37]){
+                    player2.x -= speed;
+                }
+                if(keys[40]){
+                    player2.y += speed;
+                }
+                if(keys[39]){
+                    player2.x += speed;
+                }
+                //----------------------------------------------------------------------------------------------------------------
+                if(rectsintersect(player, player2)){ //if the player and player2 intersect then the player is tagged and the tagger wins
+                    player.tint = 0xff0000;
+                    player2.tint = 0xff0000;
+                    speed = 0; //speed is set to 0 so players cannot move
+                    player.x = 16; //resets the field
+                    player.y = app.view.height / 2;
+                    player2.x = 2000;
+                    player2.y = app.view.height / 2;
+                    tagged = true //tagged is set to true so the tagger wins
+                    taggerwins += 1; //tagger wins is updated by 1 point
+                   
+                    
+                } else if (timer == 800){ //only passes if the timer reaches 800 ticks and the players to do not intersect
+                    runnerwinscheck();
+                }
+                else{ //if the players do not intersect then nothing changes and the game continues
+                    player.tint = 0xffffff; 
+                    player2.tint = 0xffffff;
+                    speed = 5;
+                    tagged = false;
+                    
+                    
+                }
+                
+                constrain(player, {x: 0, y: 0, width: app.view.width, height: app.view.height}); //constrains the player to the canvas
+                constrain(player2, {x: 0, y: 0, width: app.view.width, height: app.view.height}); //constrains the player2 to the canvas
+                //on screen displays for timer, tagger wins and runner wins
+                taggerwinsstat.innerHTML = taggerwins; //updates the taggerwinsstat to the taggerwins variable
+                runnerwinsstat.innerHTML = runnerwins; //updates the runnerwinsstat to the runnerwins variable
+                timermessage.innerHTML = timer; //updates the timermessage to the timer variable 
+                
+            }
+            //constrain player to canvas to keep the player from going off the screen
+            
+           
+        }
+        
+
+    </script>
+    <script>
+        //TECHNICAL HIGHLIGHT 2 for C2--------------------------------------------------------------------------------------
+        // background functions for checking bounds
+        //checks if the player is within the bounds of the canvas
+        //Uses operators to check if the player is within the bounds of the canvas using player x and y values and the width and height of the canvas
+        function constrain(sprite, bounds){
+                if(sprite.x < bounds.x){
+                    sprite.x = bounds.x;
+                }
+                if(sprite.y < bounds.y){
+                    sprite.y = bounds.y;
+                }
+                if(sprite.x + sprite.width > bounds.width){
+                    sprite.x = bounds.width - sprite.width;
+                }
+                if(sprite.y + sprite.height > bounds.height){
+                    sprite.y = bounds.height - sprite.height;
+                }
+            }
+    //----------------------------------------------------------------------------------------------------------------
+            //checks if the player intersects with the other player to determine if the tagger wins
+        function rectsintersect(a, b){ // a and b are the player sprites or any other variables that need to be checked
+                let aBox = a.getBounds(); //gets the bounds of the player sprite which is a useful pixi.js function
+                let bBox = b.getBounds(); //gets the bounds of the player2 sprite
+                return aBox.x + aBox.width > bBox.x && //checks if the player sprites intersect using the bounds of the player sprites x and y values
+                aBox.x < bBox.x + bBox.width &&
+                aBox.y + aBox.height > bBox.y &&
+                aBox.y < bBox.y + bBox.height;
+            }
+            //checks if the runner wins if tagged = false and resets the timer as well as updates the runnerwins variable
+        function runnerwinscheck(){
+                if(tagged == false){
+                    runnerwins += 1;//runner wins is updated by 1 point
+                
+                    timer = 0; //timer is reset to 0
+                }
+                tagged = false; //tagged is set to false to allow the game to continue
+                runnerwinsstat.innerHTML = runnerwins; //updates the runnerwinsstat to the runnerwins variable
+            }
+
+         
+    </script>
+</head>
+<body>
+ <!--TECHNICAL HIGHLIGHT 3 for C2-------------------------------------------------------------------------------------->
+ <!--Displays the game stats on the screen such as timer, number or runner wins and number of tagger wins-->
+    <div id="'gamemessage">
+        <h1>Tagger Wins: <span id="taggerwinsstat">0</span></h1>
+        <h1>Runner Wins: <span id="runnerwinsstat">0</span></h1>
+    </div>
+    <div id="timermessage"></div>
+    
+</body>
+<!--Instructions for the game-->
+<p>PRESS CRTL+R TO START</p>
+<p>This is a two player game, red is the runner and uses the arrow keys for movment, blue is the tagger and uses the awsd keys for movement, the goal is for red to evade the blue tagger chasing, every 5 seconds avoided the runner gains 1 point</p>
+</html>
