@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src ="pixi.min.js" ></script> 
+    <script>
+        let app;
+        let player;
+        let keys = {};
+        let keysDiv = document.querySelector('#keys');
+        let timer = 0
+
+        let player3;
+        let speed = 5;
+        let taggerwins = 0;
+        let runnerwins = 0;
+      
+        
+        window.onload = function(){
+            // hide pointer
+            
+            app = new PIXI.Application({
+                width: 2500,
+                height: 1000,
+                backgroundColor: 0x1000b
+            });
+            document.body.appendChild(app.view);
+        
+
+            player = new PIXI.Sprite.from('tag.png');
+          
+            player3 = new PIXI.Sprite.from('player.png');
+
+            player.anchor.set(0.5);
+
+            player3.anchor.set(0.5);
+            player.x = 16;
+          
+            player3.x = 2000;
+            player.y = app.view.height / 2;
+         
+            player3.y = app.view.height / 2;
+            app.stage.addChild(player);
+          
+            app.stage.addChild(player3);
+            
+
+
+
+            // keyboard movement
+            window.addEventListener('keydown', keysDown);
+            window.addEventListener('keyup', keysUp);
+
+            app.ticker.add(gameLoop);
+
+
+            keysDiv = document.querySelector('#keys');
+            function rectsintersect(a, b){
+                let aBox = a.getBounds();
+                let bBox = b.getBounds();
+                return aBox.x + aBox.width > bBox.x &&
+                aBox.x < bBox.x + bBox.width &&
+                aBox.y + aBox.height > bBox.y &&
+                aBox.y < bBox.y + bBox.height;
+            }
+            function keysDown(e){
+                // 87
+                // 65
+                // 83
+                // 68 WASD
+                keys[e.keyCode] = true;
+
+            }
+            function keysUp(e){
+                keys[e.keyCode] = false;
+            }
+            // mouse movenent
+            app.stage.interactive = true;
+         
+          
+            function gameLoop(){
+                timer += 1;
+                console.log(timer);
+                
+                if(keys[87]){
+                    player.y -= speed;
+                }
+                if(keys[65]){
+                    player.x -= speed;
+                }
+                if(keys[83]){
+                    player.y += speed;
+                }
+                if(keys[68]){
+                    player.x += speed;
+                }
+                if(keys[38]){
+                    player3.y -= speed;
+                }
+                if(keys[37]){
+                    player3.x -= speed;
+                }
+                if(keys[40]){
+                    player3.y += speed;
+                }
+                if(keys[39]){
+                    player3.x += speed;
+                }
+                if(rectsintersect(player, player3)){
+                    player.tint = 0xff0000;
+                    player3.tint = 0xff0000;
+                    speed = 0;
+                    player.x = 16;
+                    player.y = app.view.height / 2;
+                    player3.x = 2000;
+                    player3.y = app.view.height / 2;
+                    tagged = true
+                    taggerwins += 1;
+                   
+                    
+                } else if (timer == 800){
+                    runnerwinscheck();
+                }
+                else{
+                    player.tint = 0xffffff;
+                    player3.tint = 0xffffff;
+                    speed = 5;
+                    tagged = false;
+                    
+                    
+                }
+                
+                constrain(player, {x: 0, y: 0, width: app.view.width, height: app.view.height});
+                constrain(player3, {x: 0, y: 0, width: app.view.width, height: app.view.height});
+                taggerwinsstat.innerHTML = taggerwins;
+                runnerwinsstat.innerHTML = runnerwins;
+                timermessage.innerHTML = timer;
+                
+            }
+            //constrain player to canvas to keep the player from going off the screen
+            function constrain(sprite, bounds){
+                if(sprite.x < bounds.x){
+                    sprite.x = bounds.x;
+                }
+                if(sprite.y < bounds.y){
+                    sprite.y = bounds.y;
+                }
+                if(sprite.x + sprite.width > bounds.width){
+                    sprite.x = bounds.width - sprite.width;
+                }
+                if(sprite.y + sprite.height > bounds.height){
+                    sprite.y = bounds.height - sprite.height;
+                }
+            }
+           
+        }
+        
+
+    </script>
+    <script>
+        
+        function runnerwinscheck(){
+                if(tagged == false){
+                    runnerwins += 1;
+                
+                    timer = 0;
+                }
+                tagged = false;
+                runnerwinsstat.innerHTML = runnerwins;
+            }
+
+         
+    </script>
+</head>
+<body>
+ 
+    <div id="'gamemessage">
+        <h1>Tagger Wins: <span id="taggerwinsstat">0</span></h1>
+        <h1>Runner Wins: <span id="runnerwinsstat">0</span></h1>
+    </div>
+    <div id="timermessage"></div>
+    
+</body>
+<p>PRESS CRTL+R TO START</p>
+<p>This is a two player game, red is the runner and uses the arrow keys for movment, blue is the tagger and uses the awsd keys for movement, the goal is for red to evade the blue tagger chasing, every 5 seconds avoided the runner gains 1 point</p>
+</html>
